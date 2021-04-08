@@ -5,7 +5,7 @@ using System.Text;
 
 namespace ConsoleFTPClient.Services
 {
-    public class SocketConnection
+    public class SocketConnection : IDisposable
     {
         private IPEndPoint endPoint;
         private Socket socket;
@@ -39,10 +39,10 @@ namespace ConsoleFTPClient.Services
             return false;
         }
 
-        public void Disconnect()
+        public void Dispose()
         {
-            socket.Disconnect(false);
-            socket.Close();
+            if (socket != null)
+                socket.Close();
         }
 
         public string Receive()
@@ -50,6 +50,13 @@ namespace ConsoleFTPClient.Services
             byte[] response = new byte[100];
             socket.Receive(response);
             return Encoding.ASCII.GetString(response, 0, response.Length);
+        }
+
+        public byte[] ReceiveBytes()
+        {
+            byte[] response = new byte[100];
+            socket.Receive(response);
+            return response;
         }
 
         public void Send(string message)

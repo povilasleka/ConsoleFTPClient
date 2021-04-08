@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -9,7 +10,6 @@ namespace ConsoleFTPClient.Services
     public class FTPService
     {
         private SocketConnection _controlConnection;
-        private SocketConnection _dataConnection;
 
         public FTPService(string ip, int port)
         {
@@ -32,6 +32,7 @@ namespace ConsoleFTPClient.Services
 
         public string ExecuteCommand(string command)
         {
+            using SocketConnection dataConnection = CreateDataConnection();
 
             _controlConnection.Send(command);
 
@@ -40,8 +41,7 @@ namespace ConsoleFTPClient.Services
             if (GetResponseStatusCode(response) != 150)
                 return response;
 
-            EstablishDataConnection();
-            _dataConnection.Connect();
+            dataConnection.Connect();
             if (GetResponseStatusCode(_controlConnection.Receive()) == 226)
             {
                 string resp;
@@ -49,7 +49,7 @@ namespace ConsoleFTPClient.Services
 
                 do
                 {
-                    resp = _dataConnection.Receive();
+                    resp = dataConnection.Receive();
                     full += resp;
                 }
                 while (!resp.Contains('\0'));
@@ -60,17 +60,14 @@ namespace ConsoleFTPClient.Services
             return "Command failed!";
         }
 
-        private bool EstablishDataConnection()
+        private SocketConnection CreateDataConnection()
         {
-            _dataConnection = null;
             _controlConnection.Send($"PASV");
             string recv = _controlConnection.Receive();
 
             (string ip, int port) = CalculatePasvIpAddressFromResponse(recv);
-            Console.WriteLine("Data Connection on " + ip + ":" + port);
 
-            _dataConnection = new SocketConnection(IPAddress.Parse(ip), port);
-            return true;
+            return new SocketConnection(IPAddress.Parse(ip), port);
         }
 
         private int GetResponseStatusCode(string response)
