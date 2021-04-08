@@ -3,21 +3,21 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
-namespace FTPClient
+namespace ConsoleFTPClient.Services
 {
-    public class SocketService
+    public class SocketConnection
     {
         private IPEndPoint endPoint;
         private Socket socket;
 
-        public SocketService(string address, int port)
+        public SocketConnection(string address, int port)
         {
             IPHostEntry ipHostInfo = Dns.GetHostEntry(address);
             IPAddress connAddr = ipHostInfo.AddressList[0];
             endPoint = new IPEndPoint(connAddr, port);
         }
 
-        public SocketService(IPAddress address, int port)
+        public SocketConnection(IPAddress address, int port)
         {
             endPoint = new IPEndPoint(address, port);
         }
@@ -26,10 +26,9 @@ namespace FTPClient
         {
             try 
             {
-                Socket client = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                client.Connect(endPoint);
-                this.socket = client;
-                
+                socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                socket.Connect(endPoint);
+
                 return true;
             }
             catch (SocketException e)
@@ -38,6 +37,12 @@ namespace FTPClient
             }
 
             return false;
+        }
+
+        public void Disconnect()
+        {
+            socket.Disconnect(false);
+            socket.Close();
         }
 
         public string Receive()
