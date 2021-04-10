@@ -1,7 +1,9 @@
 using System;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using FTPClient;
 
 namespace ConsoleFTPClient.Services
 {
@@ -22,21 +24,17 @@ namespace ConsoleFTPClient.Services
             endPoint = new IPEndPoint(address, port);
         }
 
-        public bool Connect()
+        public void Connect()
         {
             try 
             {
                 socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 socket.Connect(endPoint);
-
-                return true;
             }
             catch (SocketException e)
             {
                 System.Console.WriteLine("Connection failed: " + e);
             }
-
-            return false;
         }
 
         public void Dispose()
@@ -45,17 +43,35 @@ namespace ConsoleFTPClient.Services
                 socket.Close();
         }
 
-        public string Receive()
+        /*public string Receive()
         {
             byte[] response = new byte[100];
             socket.Receive(response);
             return Encoding.ASCII.GetString(response, 0, response.Length);
+        }*/
+
+        public SocketResponse Receive()
+        {
+            byte[] response = new byte[100];
+            socket.Receive(response);
+
+            return new SocketResponse(response);
         }
 
         public byte[] ReceiveBytes()
         {
             byte[] response = new byte[100];
             socket.Receive(response);
+            return response;
+        }
+
+        public byte[] SendReceive(byte[] data)
+        {
+            byte[] response = new byte[10];
+
+            socket.Send(data);
+            socket.Receive(response);
+
             return response;
         }
 

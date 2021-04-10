@@ -2,14 +2,17 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using FTPClient;
 
 namespace ConsoleFTPClient.Services
 {
     public class FTPService
     {
         private SocketConnection _controlConnection;
+        private SocketConnection _dataConnection = null;
 
         public FTPService(string ip, int port)
         {
@@ -20,59 +23,63 @@ namespace ConsoleFTPClient.Services
         {
             _controlConnection.Connect();
             _controlConnection.Receive();
+
             _controlConnection.Send($"USER {user}");
             _controlConnection.Receive();
-            _controlConnection.Send($"PASS {pass}");
 
-            if (GetResponseStatusCode(_controlConnection.Receive()) != 230)
+            _controlConnection.Send($"PASS {pass}");
+            if (_controlConnection.Receive().ResponseCode != 230)
                 return false;
 
             return true;
         }
 
-        public string ExecuteCommand(string command)
+        public SocketResponse ExecuteCommand(string command)
         {
-            using SocketConnection dataConnection = CreateDataConnection();
+            CreateDataConnection();
 
-            _controlConnection.Send(command);
-
+            _controlConnection.Send(command + "\r\n");
             var response = _controlConnection.Receive();
 
-            if (GetResponseStatusCode(response) != 150)
-                return response;
+            return response;
+        }
 
-            dataConnection.Connect();
-            if (GetResponseStatusCode(_controlConnection.Receive()) == 226)
+        public SocketResponse ReceiveData()
+        {
+            _dataConnection.Connect();
+            SocketResponse connectResponse = _controlConnection.Receive();
+
+            if (connectResponse.ResponseCode == 226)
             {
-                string resp;
+                SocketResponse localResponse = null;
                 string full = "";
 
                 do
                 {
-                    resp = dataConnection.Receive();
-                    full += resp;
+                    localResponse = _dataConnection.Receive();
+                    full += localResponse.Message;
                 }
-                while (!resp.Contains('\0'));
+                while (!localResponse.LastRecord);
 
-                return full;
+                return new SocketResponse(Encoding.ASCII.GetBytes(full));
             }
 
-            return "Command failed!";
+            return default(SocketResponse);
         }
 
-        private SocketConnection CreateDataConnection()
+
+
+        private void CreateDataConnection()
         {
+            if (_dataConnection != null)
+                _dataConnection.Dispose();
+
             _controlConnection.Send($"PASV");
-            string recv = _controlConnection.Receive();
+            string recv = _controlConnection.Receive().Message;
 
             (string ip, int port) = CalculatePasvIpAddressFromResponse(recv);
 
-            return new SocketConnection(IPAddress.Parse(ip), port);
-        }
-
-        private int GetResponseStatusCode(string response)
-        {
-            return int.Parse(response.Split(new char[] { ' ', '-' })[0]);
+            _dataConnection = new SocketConnection(IPAddress.Parse(ip), port);
         }
 
         public (string, int) CalculatePasvIpAddressFromResponse(string response)

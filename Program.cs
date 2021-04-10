@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Net;
-using System.Net.Sockets;
-using System.Threading.Tasks;
 using ConsoleFTPClient.Services;
 
 namespace ConsoleFTPClient
@@ -10,27 +7,45 @@ namespace ConsoleFTPClient
     {
         static void Main(string[] args)
         {
-            FTPService ftp = new FTPService("195.144.107.198", 21);
-
-            Console.Write("Username: ");
-            string user = Console.ReadLine();
-            Console.Write("Password: ");
-            string pass = Console.ReadLine();
-
-            if (ftp.Login(user, pass))
-            {
-                Console.WriteLine("Logged in!");
-            }
-            else
-            {
-                Console.WriteLine("Login failed!");
-                Environment.Exit(-1);
-            }
+            // 195.144.107.198
+            FTPService ftp = null;
 
             while(true)
             {
                 Console.Write("ftp> ");
-                Console.WriteLine(ftp.ExecuteCommand(Console.ReadLine()));
+
+                string cmd = Console.ReadLine();
+                switch(cmd.Split(" ")[0])
+                {
+                    case "open":
+                        if (ftp != null) break;
+                        ftp = new FTPService(cmd.Split(" ")[1], 21);
+                        Console.Write("User: ");
+                        string user = Console.ReadLine();
+                        Console.Write("Password: ");
+                        string pass = Console.ReadLine();
+                        if (ftp.Login(user, pass))
+                        {
+                            Console.WriteLine($"Connected to {cmd.Split(" ")[1]}");
+                        }
+                        else
+                        {
+                            ftp = null;
+                            Console.WriteLine("Connection failed!");
+                        }
+                        break;
+                    case "ls":
+                        ftp.ExecuteCommand("LIST");
+                        Console.WriteLine(ftp.ReceiveData().Message);
+                        break;
+                    case "cd":
+                        ftp.ExecuteCommand($"CWD {cmd.Split(" ")[1]}");
+                        Console.WriteLine(ftp.ReceiveData().Message);
+                        break;
+                    default:
+                        System.Console.WriteLine("Command not found!");
+                        break;
+                }
             }
 
         }
