@@ -22,9 +22,9 @@ namespace FTPClient
                             if (ftp != null) break;
                             ftp = new FtpService(cmd.Split(" ")[1], 21);
                             Console.Write("User: ");
-                            string user = Console.ReadLine();
+                            var user = Console.ReadLine();
                             Console.Write("Password: ");
-                            string pass = Console.ReadLine();
+                            var pass = Console.ReadLine();
                             if (ftp.Login(user, pass))
                             {
                                 Console.WriteLine($"Connected to {cmd.Split(" ")[1]}");
@@ -42,7 +42,6 @@ namespace FTPClient
                                 Console.Write(ftp.ExecuteCommand("LIST").Message);
                                 Console.Write(ftp.ReceiveData().Message);
                             }
-
                             break;
                         case "cd":
                             if (ftp != null) Console.Write(ftp.ExecuteCommand($"CWD {cmd.Split(" ")[1]}").Message);
@@ -51,10 +50,17 @@ namespace FTPClient
                             if (ftp != null)
                             {
                                 Console.WriteLine(ftp.ExecuteCommand($"RETR {cmd.Split(" ")[1]}").Message);
-                                FileBuilder fb = new FileBuilder(ftp.ReceiveData().ByteCode);
-                                fb.SaveFile(@$"C:\Users\povilas\Downloads\{cmd.Split(" ")[1]}");
+                                var fb = new FileBuilder(ftp.ReceiveData().ByteCode);
+                                fb.SaveFile(@$"{cmd.Split(" ")[2]}");
                             }
-
+                            break;
+                        case "binary":
+                            if (ftp != null) 
+                                Console.WriteLine(ftp.ExecuteCommand("TYPE I").Message);
+                            break;
+                        case "ascii":
+                            if (ftp != null)
+                                Console.WriteLine(ftp.ExecuteCommand("TYPE A").Message);
                             break;
                         default:
                             System.Console.WriteLine("Command not found!");
