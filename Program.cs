@@ -1,5 +1,6 @@
 ﻿using System;
 using ConsoleFTPClient.Services;
+using FTPClient.Services;
 
 namespace ConsoleFTPClient
 {
@@ -35,12 +36,16 @@ namespace ConsoleFTPClient
                         }
                         break;
                     case "ls":
-                        ftp.ExecuteCommand("LIST");
-                        Console.WriteLine(ftp.ReceiveData().Message);
+                        Console.Write(ftp.ExecuteCommand("LIST").Message);
+                        Console.Write(ftp.ReceiveData().Message);
                         break;
                     case "cd":
-                        ftp.ExecuteCommand($"CWD {cmd.Split(" ")[1]}");
-                        Console.WriteLine(ftp.ReceiveData().Message);
+                        Console.Write(ftp.ExecuteCommand($"CWD {cmd.Split(" ")[1]}").Message);
+                        break;
+                    case "get":
+                        Console.WriteLine(ftp.ExecuteCommand($"RETR {cmd.Split(" ")[1]}").Message);
+                        FileBuilder fb = new FileBuilder(ftp.ReceiveData().ByteCode);
+                        fb.SaveFile(@$"C:\Users\povilas\Downloads\{cmd.Split(" ")[1]}");
                         break;
                     default:
                         System.Console.WriteLine("Command not found!");

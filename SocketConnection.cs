@@ -43,36 +43,12 @@ namespace ConsoleFTPClient.Services
                 socket.Close();
         }
 
-        /*public string Receive()
-        {
-            byte[] response = new byte[100];
-            socket.Receive(response);
-            return Encoding.ASCII.GetString(response, 0, response.Length);
-        }*/
-
         public SocketResponse Receive()
         {
             byte[] response = new byte[100];
             socket.Receive(response);
 
             return new SocketResponse(response);
-        }
-
-        public byte[] ReceiveBytes()
-        {
-            byte[] response = new byte[100];
-            socket.Receive(response);
-            return response;
-        }
-
-        public byte[] SendReceive(byte[] data)
-        {
-            byte[] response = new byte[10];
-
-            socket.Send(data);
-            socket.Receive(response);
-
-            return response;
         }
 
         public void Send(string message)

@@ -1,10 +1,7 @@
 using System;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using FTPClient;
 
 namespace ConsoleFTPClient.Services
@@ -25,7 +22,7 @@ namespace ConsoleFTPClient.Services
             _controlConnection.Receive();
 
             _controlConnection.Send($"USER {user}");
-            _controlConnection.Receive();
+            var _ = _controlConnection.Receive();
 
             _controlConnection.Send($"PASS {pass}");
             if (_controlConnection.Receive().ResponseCode != 230)
@@ -38,7 +35,7 @@ namespace ConsoleFTPClient.Services
         {
             CreateDataConnection();
 
-            _controlConnection.Send(command + "\r\n");
+            _controlConnection.Send(command);
             var response = _controlConnection.Receive();
 
             return response;
@@ -74,7 +71,7 @@ namespace ConsoleFTPClient.Services
             if (_dataConnection != null)
                 _dataConnection.Dispose();
 
-            _controlConnection.Send($"PASV");
+            _controlConnection.Send("PASV");
             string recv = _controlConnection.Receive().Message;
 
             (string ip, int port) = CalculatePasvIpAddressFromResponse(recv);
