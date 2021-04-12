@@ -1,35 +1,33 @@
 using System;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using FTPClient;
 
-namespace ConsoleFTPClient.Services
+namespace FTPClient
 {
     public class SocketConnection : IDisposable
     {
-        private IPEndPoint endPoint;
-        private Socket socket;
+        private readonly IPEndPoint _endPoint;
+        private Socket _socket;
 
         public SocketConnection(string address, int port)
         {
-            IPHostEntry ipHostInfo = Dns.GetHostEntry(address);
-            IPAddress connAddr = ipHostInfo.AddressList[0];
-            endPoint = new IPEndPoint(connAddr, port);
+            var ipHostInfo = Dns.GetHostEntry(address);
+            var connAddr = ipHostInfo.AddressList[0];
+            _endPoint = new IPEndPoint(connAddr, port);
         }
 
         public SocketConnection(IPAddress address, int port)
         {
-            endPoint = new IPEndPoint(address, port);
+            _endPoint = new IPEndPoint(address, port);
         }
 
         public void Connect()
         {
             try 
             {
-                socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                socket.Connect(endPoint);
+                _socket = new Socket(_endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                _socket.Connect(_endPoint);
             }
             catch (SocketException e)
             {
@@ -39,22 +37,21 @@ namespace ConsoleFTPClient.Services
 
         public void Dispose()
         {
-            if (socket != null)
-                socket.Close();
+            _socket?.Close();
         }
 
         public SocketResponse Receive()
         {
-            byte[] response = new byte[100];
-            socket.Receive(response);
+            var response = new byte[100];
+            _socket.Receive(response);
 
             return new SocketResponse(response);
         }
 
         public void Send(string message)
         {
-            byte[] messageInBytes = Encoding.ASCII.GetBytes(message + "\r\n");
-            socket.Send(messageInBytes);
+            var messageInBytes = Encoding.ASCII.GetBytes(message + "\r\n");
+            _socket.Send(messageInBytes);
         }
     }
 }

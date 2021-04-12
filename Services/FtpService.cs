@@ -4,14 +4,14 @@ using System.Net;
 using System.Text;
 using FTPClient;
 
-namespace ConsoleFTPClient.Services
+namespace FTPClient.Services
 {
-    public class FTPService
+    public class FtpService
     {
-        private SocketConnection _controlConnection;
+        private readonly SocketConnection _controlConnection;
         private SocketConnection _dataConnection = null;
 
-        public FTPService(string ip, int port)
+        public FtpService(string ip, int port)
         {
             _controlConnection = new SocketConnection(IPAddress.Parse(ip), port);
         }
@@ -25,10 +25,7 @@ namespace ConsoleFTPClient.Services
             var _ = _controlConnection.Receive();
 
             _controlConnection.Send($"PASS {pass}");
-            if (_controlConnection.Receive().ResponseCode != 230)
-                return false;
-
-            return true;
+            return _controlConnection.Receive().ResponseCode == 230;
         }
 
         public SocketResponse ExecuteCommand(string command)
@@ -44,52 +41,47 @@ namespace ConsoleFTPClient.Services
         public SocketResponse ReceiveData()
         {
             _dataConnection.Connect();
-            SocketResponse connectResponse = _controlConnection.Receive();
+            var connectResponse = _controlConnection.Receive();
 
-            if (connectResponse.ResponseCode == 226)
+            if (connectResponse.ResponseCode != 226) return default(SocketResponse);
+            
+            SocketResponse localResponse = null;
+            var full = "";
+
+            do
             {
-                SocketResponse localResponse = null;
-                string full = "";
-
-                do
-                {
-                    localResponse = _dataConnection.Receive();
-                    full += localResponse.Message;
-                }
-                while (!localResponse.LastRecord);
-
-                return new SocketResponse(Encoding.ASCII.GetBytes(full));
+                localResponse = _dataConnection.Receive();
+                full += localResponse.Message;
             }
+            while (!localResponse.LastRecord);
 
-            return default(SocketResponse);
+            return new SocketResponse(Encoding.ASCII.GetBytes(full));
+
         }
-
-
-
+        
         private void CreateDataConnection()
         {
-            if (_dataConnection != null)
-                _dataConnection.Dispose();
+            _dataConnection?.Dispose();
 
             _controlConnection.Send("PASV");
-            string recv = _controlConnection.Receive().Message;
+            var recv = _controlConnection.Receive().Message;
 
-            (string ip, int port) = CalculatePasvIpAddressFromResponse(recv);
+            var (ip, port) = CalculatePasvIpAddressFromResponse(recv);
 
             _dataConnection = new SocketConnection(IPAddress.Parse(ip), port);
         }
 
-        public (string, int) CalculatePasvIpAddressFromResponse(string response)
+        private static (string, int) CalculatePasvIpAddressFromResponse(string response)
         {
-            var splitted = response.Split(" ")[4] // we get the (a,b,c,d,x,y) structure with a lot of junk
+            var parts = response.Split(" ")[4] // we get the (a,b,c,d,x,y) structure with a lot of junk
                 .Replace("(", "").Replace(")", "").Replace(".", "") // clearing the junk
                 .Replace("\r", "").Replace("\0", "")
                 .Split(","); 
 
-            string ip = splitted[0] + "." + splitted[1] + "." + splitted[2] + "." + splitted[3];
+            var ip = parts[0] + "." + parts[1] + "." + parts[2] + "." + parts[3];
 
             // port is calculated from (n,n,n,n,x,y) | PORT = x*256 + y
-            int port = int.Parse(splitted[4]) * 256 + int.Parse(splitted[5]);
+            var port = int.Parse(parts[4]) * 256 + int.Parse(parts[5]);
 
             return (ip, port);
         }

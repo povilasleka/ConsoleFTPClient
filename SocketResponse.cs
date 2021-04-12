@@ -11,16 +11,13 @@ namespace FTPClient
 
         public byte[] ByteCode { get; }
 
-        public string Message 
-        {
-            get => Encoding.ASCII.GetString(ByteCode);
-        }
+        public string Message => 
+            Encoding.ASCII.GetString(ByteCode);
 
-        public int ResponseCode 
-        {
-            get => int.Parse(Message.Split(new char[] { ' ', '-' })[0]);
-        }
+        public int ResponseCode => 
+            int.Parse(Message.Split(new char[] { ' ', '-' })[0]);
 
-        public bool LastRecord { get => Message.Contains('\0'); }
+        public bool LastRecord => 
+            Message.Contains('\0');
     }
 }

@@ -11,7 +11,7 @@ namespace FTPClient.Services
 {
     public class FileBuilder
     {
-        private byte[] _buffer;
+        private readonly byte[] _buffer;
 
         public FileBuilder(byte[] buffer)
         {
@@ -20,10 +20,8 @@ namespace FTPClient.Services
 
         public void SaveFile(string path)
         {
-            using (FileStream fs = File.Create(path))
-            {
-                fs.Write(_buffer);
-            }
+            using var fs = File.Create(path);
+            fs.Write(_buffer);
         }
         
     }
