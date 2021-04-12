@@ -45,7 +45,8 @@ namespace FTPClient
             var response = new byte[100];
             _socket.Receive(response);
 
-            return new SocketResponse(response);
+            var socketResponse = new SocketResponse(response);
+            return socketResponse;
         }
 
         public void Send(string message)

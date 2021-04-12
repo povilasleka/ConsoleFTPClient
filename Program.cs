@@ -49,18 +49,18 @@ namespace FTPClient
                         case "get":
                             if (ftp != null)
                             {
-                                Console.WriteLine(ftp.ExecuteCommand($"RETR {cmd.Split(" ")[1]}").Message);
+                                Console.Write(ftp.ExecuteCommand($"RETR {cmd.Split(" ")[1]}").Message);
                                 var fb = new FileBuilder(ftp.ReceiveData().ByteCode);
                                 fb.SaveFile(@$"{cmd.Split(" ")[2]}");
                             }
                             break;
                         case "binary":
                             if (ftp != null) 
-                                Console.WriteLine(ftp.ExecuteCommand("TYPE I").Message);
+                                Console.Write(ftp.ExecuteCommand("TYPE I").Message);
                             break;
                         case "ascii":
                             if (ftp != null)
-                                Console.WriteLine(ftp.ExecuteCommand("TYPE A").Message);
+                                Console.Write(ftp.ExecuteCommand("TYPE A").Message);
                             break;
                         default:
                             System.Console.WriteLine("Command not found!");

@@ -21,7 +21,9 @@ namespace FTPClient.Services
         public void SaveFile(string path)
         {
             using var fs = File.Create(path);
-            fs.Write(_buffer);
+            using var bf = new BinaryWriter(fs);
+            
+            bf.Write(_buffer);
         }
         
     }

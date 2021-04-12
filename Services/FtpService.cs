@@ -31,6 +31,7 @@ namespace FTPClient.Services
         public SocketResponse ExecuteCommand(string command)
         {
             CreateDataConnection();
+            _dataConnection.Connect();
 
             _controlConnection.Send(command);
             var response = _controlConnection.Receive();
@@ -40,10 +41,10 @@ namespace FTPClient.Services
 
         public SocketResponse ReceiveData()
         {
-            _dataConnection.Connect();
             var connectResponse = _controlConnection.Receive();
 
             if (connectResponse.ResponseCode != 226) return default(SocketResponse);
+            Console.Write(connectResponse.Message);
             
             SocketResponse localResponse = null;
             var full = "";

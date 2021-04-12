@@ -20,8 +20,8 @@
     <changedPaths>
       <option value="$PROJECT_DIR$/Services/SocketConnection.cs" />
       <option value="$PROJECT_DIR$/Services/FTPService.cs" />
-      <option value="$PROJECT_DIR$/Services/FileBuilder.cs" />
       <option value="$PROJECT_DIR$/SocketResponse.cs" />
+      <option value="$PROJECT_DIR$/Services/FileBuilder.cs" />
       <option value="$PROJECT_DIR$/SocketConnection.cs" />
       <option value="$PROJECT_DIR$/Services/FtpService.cs" />
       <option value="$PROJECT_DIR$/Program.cs" />
@@ -72,6 +72,8 @@
       <updated>1618173914267</updated>
       <workItem from="1618173955644" duration="1078000" />
       <workItem from="1618211492962" duration="4710000" />
+      <workItem from="1618217489021" duration="6050000" />
+      <workItem from="1618227768982" duration="4051000" />
     </task>
     <servers />
   </component>
@@ -94,5 +96,42 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="DotNet Breakpoints">
+          <url>file://$PROJECT_DIR$/Services/FtpService.cs</url>
+          <line>81</line>
+          <properties documentPath="$PROJECT_DIR$/Services/FtpService.cs" initialLine="80" containingFunctionPresentation="method 'CalculatePasvIpAddressFromResponse'">
+            <startOffsets>
+              <option value="2483" />
+            </startOffsets>
+            <endOffsets>
+              <option value="2552" />
+            </endOffsets>
+          </properties>
+          <option name="timeStamp" value="3" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DotNet Breakpoints">
+          <url>file://$PROJECT_DIR$/Services/FtpService.cs</url>
+          <line>86</line>
+          <properties documentPath="$PROJECT_DIR$/Services/FtpService.cs" initialLine="85" containingFunctionPresentation="method 'CalculatePasvIpAddressFromResponse'">
+            <startOffsets>
+              <option value="2711" />
+            </startOffsets>
+            <endOffsets>
+              <option value="2729" />
+            </endOffsets>
+          </properties>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+    <pin-to-top-manager>
+      <pinned-members>
+        <PinnedItemInfo parentTag="Frame#FTPClient.SocketConnection.Receive" memberName="socketResponse" />
+      </pinned-members>
+    </pin-to-top-manager>
   </component>
 </project>
