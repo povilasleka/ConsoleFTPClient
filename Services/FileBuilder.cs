@@ -1,30 +1,50 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace FTPClient.Services
 {
-    public class FileBuilder
+    public static class FileBuilder
     {
-        private readonly byte[] _buffer;
-
-        public FileBuilder(byte[] buffer)
+        public static void Write(string path, byte[] data)
         {
-            _buffer = buffer;
-        }
+            FileStream fs = null;
+            if (!File.Exists(path))
+            {
+                fs = File.Create(path);
+            }
+            else
+            {
+                fs = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.None);
+            }
 
-        public void SaveFile(string path)
-        {
-            using var fs = File.Create(path);
-            using var bf = new BinaryWriter(fs);
+            var bf = new BinaryWriter(fs);
+            bf.Write(data);
             
-            bf.Write(_buffer);
+            bf.Close();
+            fs.Close();
+            
+            bf.Dispose();
+            fs.Dispose();
+
+            System.Console.WriteLine($"Written {data.Length} bytes.");
         }
-        
+
+        private static byte[] TrimZeroBytes(byte[] buffer)
+        {
+            while(true)
+            {
+                if (buffer[^1] == '\0')
+                {
+                    buffer = buffer.Take(buffer.Length - 1).ToArray();
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            return buffer;
+        }
     }
 }

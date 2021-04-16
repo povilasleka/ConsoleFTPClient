@@ -43,7 +43,8 @@ namespace FTPClient
         public SocketResponse Receive()
         {
             var response = new byte[100];
-            _socket.Receive(response);
+            if (_socket.Receive(response) == 0)
+                return default;
 
             var socketResponse = new SocketResponse(response);
             return socketResponse;

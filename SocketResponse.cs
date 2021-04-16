@@ -17,7 +17,6 @@ namespace FTPClient
         public int ResponseCode => 
             int.Parse(Message.Split(new char[] { ' ', '-' })[0]);
 
-        public bool LastRecord => 
-            Message.Contains('\0');
+        public int Size => ByteCode.Length;
     }
 }

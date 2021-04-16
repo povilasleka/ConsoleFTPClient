@@ -1,7 +1,9 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading.Tasks;
 using FTPClient;
 
 namespace FTPClient.Services
@@ -42,22 +44,36 @@ namespace FTPClient.Services
         public SocketResponse ReceiveData()
         {
             var connectResponse = _controlConnection.Receive();
-
-            if (connectResponse.ResponseCode != 226) return default(SocketResponse);
             Console.Write(connectResponse.Message);
-            
-            SocketResponse localResponse = null;
-            var full = "";
 
-            do
+            using var ms = new MemoryStream();
+            while (true)
             {
-                localResponse = _dataConnection.Receive();
-                full += localResponse.Message;
+                var localResponse = _dataConnection.Receive();
+                if (localResponse == default)
+                    break;
+                    
+                ms.Write(localResponse.ByteCode);
             }
-            while (!localResponse.LastRecord);
 
-            return new SocketResponse(Encoding.ASCII.GetBytes(full));
+            return new SocketResponse(ms.ToArray());
+        }
 
+        public void DownloadData(string path)
+        {
+            //var connectResponse = _controlConnection.Receive();
+            //Console.Write(connectResponse.Message);
+
+            while (true)
+            {
+                var localResponse = _dataConnection.Receive();
+                if (localResponse == default)
+                {
+                    break;
+                }
+                
+                FileBuilder.Write(path, localResponse.ByteCode);
+            }
         }
         
         private void CreateDataConnection()

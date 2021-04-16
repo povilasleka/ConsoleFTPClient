@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using FTPClient.Services;
 
 namespace FTPClient
@@ -50,8 +51,7 @@ namespace FTPClient
                             if (ftp != null)
                             {
                                 Console.Write(ftp.ExecuteCommand($"RETR {cmd.Split(" ")[1]}").Message);
-                                var fb = new FileBuilder(ftp.ReceiveData().ByteCode);
-                                fb.SaveFile(@$"{cmd.Split(" ")[2]}");
+                                ftp.DownloadData(@$"{cmd.Split(" ")[2]}");
                             }
                             break;
                         case "binary":
