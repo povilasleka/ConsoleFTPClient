@@ -29,22 +29,5 @@ namespace FTPClient.Services
 
             System.Console.WriteLine($"Written {data.Length} bytes.");
         }
-
-        private static byte[] TrimZeroBytes(byte[] buffer)
-        {
-            while(true)
-            {
-                if (buffer[^1] == '\0')
-                {
-                    buffer = buffer.Take(buffer.Length - 1).ToArray();
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            return buffer;
-        }
     }
 }

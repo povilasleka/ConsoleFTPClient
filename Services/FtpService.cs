@@ -21,35 +21,39 @@ namespace FTPClient.Services
         public bool Login(string user, string pass)
         {
             _controlConnection.Connect();
-            _controlConnection.Receive();
+            _controlConnection.Receive(100);
 
             _controlConnection.Send($"USER {user}");
-            var _ = _controlConnection.Receive();
+            var _ = _controlConnection.Receive(100);
 
             _controlConnection.Send($"PASS {pass}");
-            return _controlConnection.Receive().ResponseCode == 230;
+            return _controlConnection.Receive(100).ResponseCode == 230;
         }
 
         public SocketResponse ExecuteCommand(string command)
         {
-            CreateDataConnection();
-            _dataConnection.Connect();
-
             _controlConnection.Send(command);
-            var response = _controlConnection.Receive();
+            var response = _controlConnection.Receive(100);
 
             return response;
         }
 
-        public SocketResponse ReceiveData()
+        public SocketResponse ReceiveData(string command = null)
         {
-            var connectResponse = _controlConnection.Receive();
+            OpenDataConnection();
+
+            if (command != null)
+            {
+                Console.WriteLine(ExecuteCommand(command).Message);
+            }
+
+            var connectResponse = _controlConnection.Receive(100);
             Console.Write(connectResponse.Message);
 
             using var ms = new MemoryStream();
             while (true)
             {
-                var localResponse = _dataConnection.Receive();
+                var localResponse = _dataConnection.Receive(100);
                 if (localResponse == default)
                     break;
                     
@@ -59,33 +63,63 @@ namespace FTPClient.Services
             return new SocketResponse(ms.ToArray());
         }
 
-        public void DownloadData(string path)
+        public void RetrieveFile(string retrPath, string savePath, bool binary)
         {
-            //var connectResponse = _controlConnection.Receive();
-            //Console.Write(connectResponse.Message);
+            if (binary)
+            {
+                ExecuteCommand("TYPE I").Print();
+            }
+            else
+            {
+                ExecuteCommand("TYPE A").Print();
+            }
+
+            DownloadData(retrPath, savePath);
+        }
+
+        private void DownloadData(string fromPath, string toPath)
+        {
+            
+            int leftToDownload = int.Parse(
+                    ExecuteCommand($"SIZE {fromPath}").Message.Split(" ")[1]);
+
+            OpenDataConnection();
+
+            ExecuteCommand($"RETR {fromPath}").Print();
+
+            //_controlConnection.Receive(100);
 
             while (true)
             {
-                var localResponse = _dataConnection.Receive();
-                if (localResponse == default)
+                int toDownload = 100;
+                if (leftToDownload < 100)
+                {
+                    toDownload = leftToDownload;
+                }
+
+                leftToDownload -= 100;
+
+                var localResponse = _dataConnection.Receive(toDownload);
+                FileBuilder.Write(toPath, localResponse.ByteCode);
+
+                if (leftToDownload <= 0)
                 {
                     break;
                 }
-                
-                FileBuilder.Write(path, localResponse.ByteCode);
             }
         }
         
-        private void CreateDataConnection()
+        private void OpenDataConnection()
         {
             _dataConnection?.Dispose();
 
             _controlConnection.Send("PASV");
-            var recv = _controlConnection.Receive().Message;
+            var recv = _controlConnection.Receive(100).Message;
 
             var (ip, port) = CalculatePasvIpAddressFromResponse(recv);
 
             _dataConnection = new SocketConnection(IPAddress.Parse(ip), port);
+            _dataConnection.Connect();
         }
 
         private static (string, int) CalculatePasvIpAddressFromResponse(string response)

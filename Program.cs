@@ -40,8 +40,8 @@ namespace FTPClient
                         case "ls":
                             if (ftp != null)
                             {
-                                Console.Write(ftp.ExecuteCommand("LIST").Message);
-                                Console.Write(ftp.ReceiveData().Message);
+                                //Console.Write(ftp.ExecuteCommand("LIST").Message);
+                                Console.Write(ftp.ReceiveData("LIST").Message);
                             }
                             break;
                         case "cd":
@@ -50,8 +50,7 @@ namespace FTPClient
                         case "get":
                             if (ftp != null)
                             {
-                                Console.Write(ftp.ExecuteCommand($"RETR {cmd.Split(" ")[1]}").Message);
-                                ftp.DownloadData(@$"{cmd.Split(" ")[2]}");
+                                ftp.RetrieveFile(cmd.Split(" ")[1], cmd.Split(" ")[2], true);
                             }
                             break;
                         case "binary":

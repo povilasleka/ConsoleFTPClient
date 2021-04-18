@@ -24,7 +24,7 @@ namespace FTPClient
 
         public void Connect()
         {
-            try 
+            try
             {
                 _socket = new Socket(_endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 _socket.Connect(_endPoint);
@@ -40,9 +40,9 @@ namespace FTPClient
             _socket?.Close();
         }
 
-        public SocketResponse Receive()
+        public SocketResponse Receive(int bytesToReceive)
         {
-            var response = new byte[100];
+            var response = new byte[bytesToReceive];
             if (_socket.Receive(response) == 0)
                 return default;
 

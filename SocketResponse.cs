@@ -18,5 +18,10 @@ namespace FTPClient
             int.Parse(Message.Split(new char[] { ' ', '-' })[0]);
 
         public int Size => ByteCode.Length;
+
+        public void Print()
+        {
+            System.Console.Write(Message);
+        }
     }
 }
