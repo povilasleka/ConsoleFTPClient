@@ -40,12 +40,12 @@ namespace FTPClient
                         case "ls":
                             if (ftp != null)
                             {
-                                //Console.Write(ftp.ExecuteCommand("LIST").Message);
-                                Console.Write(ftp.ReceiveData("LIST").Message);
+                                ftp.ReceiveData("LIST").Print();
                             }
                             break;
                         case "cd":
-                            if (ftp != null) Console.Write(ftp.ExecuteCommand($"CWD {cmd.Split(" ")[1]}").Message);
+                            if (ftp != null) 
+                                ftp.ExecuteCommand($"CWD {cmd.Split(" ")[1]}").Print();
                             break;
                         case "get":
                             if (ftp != null)
@@ -55,11 +55,11 @@ namespace FTPClient
                             break;
                         case "binary":
                             if (ftp != null) 
-                                Console.Write(ftp.ExecuteCommand("TYPE I").Message);
+                                ftp.ExecuteCommand("TYPE I").Print();
                             break;
                         case "ascii":
                             if (ftp != null)
-                                Console.Write(ftp.ExecuteCommand("TYPE A").Message);
+                                ftp.ExecuteCommand("TYPE A").Print();
                             break;
                         default:
                             System.Console.WriteLine("Command not found!");

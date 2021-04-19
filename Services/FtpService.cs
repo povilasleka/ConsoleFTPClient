@@ -38,17 +38,15 @@ namespace FTPClient.Services
             return response;
         }
 
-        public SocketResponse ReceiveData(string command = null)
+        public SocketResponse ReceiveData(string command = "")
         {
             OpenDataConnection();
 
-            if (command != null)
-            {
-                Console.WriteLine(ExecuteCommand(command).Message);
-            }
+            if (command != string.Empty)
+                ExecuteCommand(command).Print();
 
             var connectResponse = _controlConnection.Receive(100);
-            Console.Write(connectResponse.Message);
+            connectResponse.Print();
 
             using var ms = new MemoryStream();
             while (true)
@@ -87,25 +85,17 @@ namespace FTPClient.Services
 
             ExecuteCommand($"RETR {fromPath}").Print();
 
-            //_controlConnection.Receive(100);
-
-            while (true)
+            while (leftToDownload > 0)
             {
-                int toDownload = 100;
+                int chunkSize = 100;
                 if (leftToDownload < 100)
                 {
-                    toDownload = leftToDownload;
+                    chunkSize = leftToDownload;
                 }
-
                 leftToDownload -= 100;
 
-                var localResponse = _dataConnection.Receive(toDownload);
+                var localResponse = _dataConnection.Receive(chunkSize);
                 FileBuilder.Write(toPath, localResponse.ByteCode);
-
-                if (leftToDownload <= 0)
-                {
-                    break;
-                }
             }
         }
         

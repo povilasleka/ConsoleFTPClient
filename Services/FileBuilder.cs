@@ -26,8 +26,6 @@ namespace FTPClient.Services
             
             bf.Dispose();
             fs.Dispose();
-
-            System.Console.WriteLine($"Written {data.Length} bytes.");
         }
     }
 }
