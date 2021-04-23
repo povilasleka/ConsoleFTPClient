@@ -38,7 +38,30 @@ namespace FTPClient.Services
             return response;
         }
 
-        public SocketResponse ReceiveData(string command = "")
+        public SocketResponse Download(string retrPath, string savePath)
+        {
+            ExecuteCommand("TYPE I").Print();
+            DownloadData(retrPath, savePath);
+
+            return default;
+        }
+
+        public SocketResponse Download(string cmd)
+        {
+            ExecuteCommand("TYPE A").Print();
+
+            return ReceiveData(cmd);
+        }
+        
+        public void Upload(byte[] data, string fileName)
+        {
+            OpenDataConnection();
+            ExecuteCommand($"STOR {fileName}").Print();
+
+            _dataConnection.Send(data);
+        }
+
+        private SocketResponse ReceiveData(string command = "")
         {
             OpenDataConnection();
 
@@ -59,20 +82,6 @@ namespace FTPClient.Services
             }
 
             return new SocketResponse(ms.ToArray());
-        }
-
-        public void RetrieveFile(string retrPath, string savePath, bool binary)
-        {
-            if (binary)
-            {
-                ExecuteCommand("TYPE I").Print();
-            }
-            else
-            {
-                ExecuteCommand("TYPE A").Print();
-            }
-
-            DownloadData(retrPath, savePath);
         }
 
         private void DownloadData(string fromPath, string toPath)

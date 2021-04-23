@@ -27,5 +27,20 @@ namespace FTPClient.Services
             bf.Dispose();
             fs.Dispose();
         }
+
+        public static byte[] Read(string path)
+        {
+            byte[] data = new byte[] {};
+
+            if (!File.Exists(path))
+                return new byte[0];
+
+            FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None);
+
+            var br = new BinaryReader(fs);
+            br.Read(data, 0, (int) fs.Length);
+
+            return data;
+        }
     }
 }

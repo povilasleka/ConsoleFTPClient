@@ -55,5 +55,10 @@ namespace FTPClient
             var messageInBytes = Encoding.ASCII.GetBytes(message + "\r\n");
             _socket.Send(messageInBytes);
         }
+
+        public void Send(byte[] data)
+        {
+            _socket.Send(data);
+        }
     }
 }
