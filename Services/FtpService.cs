@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using FTPClient;
 
@@ -52,22 +53,17 @@ namespace FTPClient.Services
 
             return ReceiveData(cmd);
         }
-        
-        public void Upload(byte[] data, string fileName)
-        {
-            OpenDataConnection();
-            ExecuteCommand($"STOR {fileName}").Print();
-
-            _dataConnection.Send(data);
-            //_controlConnection.Receive(50).Print();
-        }
 
         public void Upload(string sourcePath, string destPath)
         {
             OpenDataConnection();
-            ExecuteCommand($"STOR {destPath}");
+            ExecuteCommand($"STOR {destPath}").Print();
 
-            FileBuilder.Read(sourcePath);
+            using FTPFile file = new FTPFile(sourcePath, "r");
+            var bytes = file.Read((int) file.Length);
+            _dataConnection.Send(bytes);
+
+            _controlConnection.Receive(50).Print();
         }
 
         private SocketResponse ReceiveData(string command = "")
@@ -100,21 +96,24 @@ namespace FTPClient.Services
                     ExecuteCommand($"SIZE {fromPath}").Message.Split(" ")[1]);
 
             OpenDataConnection();
-
+            FTPFile file = new FTPFile(toPath, "w");
             ExecuteCommand($"RETR {fromPath}").Print();
-            _controlConnection.Receive(50).Print();
+            
             while (leftToDownload > 0)
             {
-                int chunkSize = 100;
-                if (leftToDownload < 100)
+                int chunkSize = 50;
+                if (leftToDownload < chunkSize)
                 {
                     chunkSize = leftToDownload;
                 }
-                leftToDownload -= 100;
+                leftToDownload -= chunkSize;
 
                 var localResponse = _dataConnection.Receive(chunkSize);
-                FileBuilder.Write(toPath, localResponse.ByteCode);
+
+                file.Write(localResponse.ByteCode);
             }
+
+            _controlConnection.Receive(50).Print();
         }
         
         private void OpenDataConnection()

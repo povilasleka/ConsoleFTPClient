@@ -64,8 +64,7 @@ namespace FTPClient
                         case "send":
                             if (ftp != null)
                             {
-                                byte[] fileData = FileBuilder.Read(cmd.Split(" ")[1]);
-                                ftp.Upload(fileData, cmd.Split(" ")[2]);
+                                ftp.Upload(cmd.Split(" ")[1], cmd.Split(" ")[2]);
                             }
                             break;
                         case "binary":
