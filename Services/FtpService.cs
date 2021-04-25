@@ -59,6 +59,15 @@ namespace FTPClient.Services
             ExecuteCommand($"STOR {fileName}").Print();
 
             _dataConnection.Send(data);
+            //_controlConnection.Receive(50).Print();
+        }
+
+        public void Upload(string sourcePath, string destPath)
+        {
+            OpenDataConnection();
+            ExecuteCommand($"STOR {destPath}");
+
+            FileBuilder.Read(sourcePath);
         }
 
         private SocketResponse ReceiveData(string command = "")
@@ -93,7 +102,7 @@ namespace FTPClient.Services
             OpenDataConnection();
 
             ExecuteCommand($"RETR {fromPath}").Print();
-
+            _controlConnection.Receive(50).Print();
             while (leftToDownload > 0)
             {
                 int chunkSize = 100;
