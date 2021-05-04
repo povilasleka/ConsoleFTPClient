@@ -2,9 +2,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using FTPClient;
 
 namespace FTPClient.Services
@@ -59,10 +56,9 @@ namespace FTPClient.Services
             OpenDataConnection();
             ExecuteCommand($"STOR {destPath}").Print();
 
-            using FTPFile file = new FTPFile(sourcePath, "r");
-            var bytes = file.Read((int) file.Length);
+            var bytes = File.ReadAllBytes(sourcePath);
             _dataConnection.Send(bytes);
-
+            _dataConnection.Dispose();
             _controlConnection.Receive(50).Print();
         }
 
@@ -92,26 +88,31 @@ namespace FTPClient.Services
         private void DownloadData(string fromPath, string toPath)
         {
             
-            int leftToDownload = int.Parse(
-                    ExecuteCommand($"SIZE {fromPath}").Message.Split(" ")[1]);
+            string message = ExecuteCommand($"SIZE {fromPath}").Message;
+            int leftToDownload = int.Parse(message.Split(" ")[1]);
 
             OpenDataConnection();
-            FTPFile file = new FTPFile(toPath, "w");
             ExecuteCommand($"RETR {fromPath}").Print();
+
+            var bytes = new byte[] {};
+            using MemoryStream ms = new MemoryStream();
             
             while (leftToDownload > 0)
             {
-                int chunkSize = 50;
+                int chunkSize = 8;
                 if (leftToDownload < chunkSize)
                 {
                     chunkSize = leftToDownload;
                 }
+
                 leftToDownload -= chunkSize;
 
                 var localResponse = _dataConnection.Receive(chunkSize);
 
-                file.Write(localResponse.ByteCode);
+                ms.Write(localResponse.ByteCode);
             }
+
+            File.WriteAllBytes(toPath, ms.ToArray());
 
             _controlConnection.Receive(50).Print();
         }

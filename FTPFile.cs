@@ -7,8 +7,8 @@ namespace FTPClient
     {
         private string _path;
         private FileStream _fs = null;
-        private BinaryWriter _bf = null;
-        private BinaryReader _br = null;
+        private BinaryWriter _binaryWriter = null;
+        private BinaryReader _binaryReader = null;
         private int _readPointerAt = 0;
 
         public FTPFile(string path, string mode)
@@ -21,7 +21,7 @@ namespace FTPClient
             }
             else if (mode == "w")
             {
-                CreateFileStreamForWriting();
+                //CreateFileStreamForWriting();
             }
             else
             {
@@ -33,15 +33,16 @@ namespace FTPClient
 
         public void Dispose()
         {
-            _fs?.Dispose();
-            _bf?.Dispose();
+            //_fs?.Dispose();
+            //_binaryWriter?.Dispose();
+            //_binaryReader?.Dispose();
         }
 
         public byte[] Read(int numBytes)
         {
             byte[] data = new byte[numBytes];
 
-            _br.Read(data, _readPointerAt, numBytes);
+            _binaryReader.Read(data, _readPointerAt, numBytes);
             _readPointerAt += numBytes;
 
             return data;
@@ -49,7 +50,8 @@ namespace FTPClient
 
         public void Write(byte[] data)
         {
-            _bf.Write(data);
+            // temporary solution.
+            File.WriteAllBytes(_path, data);
         }
 
         private void CreateFileStreamForReading()
@@ -63,8 +65,8 @@ namespace FTPClient
             }
             else
             {
-                _fs = new FileStream(_path, FileMode.Open, FileAccess.Read, FileShare.None);
-                _br = new BinaryReader(_fs);
+                _fs = new FileStream(_path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+                _binaryReader = new BinaryReader(_fs);
             }
         }
 
@@ -76,12 +78,12 @@ namespace FTPClient
             if (!File.Exists(_path))
             {
                 _fs = File.Create(_path);
-                _bf = new BinaryWriter(_fs);
+                _binaryWriter = new BinaryWriter(_fs);
             }
             else
             {
-                _fs = new FileStream(_path, FileMode.Append, FileAccess.Write, FileShare.None);
-                _bf = new BinaryWriter(_fs);
+                _fs = new FileStream(_path, FileMode.Append, FileAccess.ReadWrite, FileShare.None);
+                _binaryWriter = new BinaryWriter(_fs);
             }
         }
     }

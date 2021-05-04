@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using FTPClient.Services;
 
@@ -13,7 +15,7 @@ namespace FTPClient
 
             while(true)
             {
-                Console.Write("ftp> ");
+                Console.Write("KT-ftp> ");
 
                 var cmd = Console.ReadLine();
                 if (cmd != null)
@@ -25,7 +27,18 @@ namespace FTPClient
                             Console.Write("User: ");
                             var user = Console.ReadLine();
                             Console.Write("Password: ");
-                            var pass = Console.ReadLine();
+                            var pass = "";
+
+                            while(true)
+                            {
+                                var key = Console.ReadKey(true);
+                                if (key.Key == ConsoleKey.Enter)
+                                    break;
+                                
+                                pass += key.KeyChar;
+                            }
+                            Console.WriteLine();
+
                             if (ftp.Login(user, pass))
                             {
                                 Console.WriteLine($"Connected to {cmd.Split(" ")[1]}");
@@ -55,6 +68,13 @@ namespace FTPClient
                             if (ftp != null)
                                 ftp.ExecuteCommand($"DELE {cmd.Split(" ")[1]}").Print();
                             break;
+                        case "mdelete": 
+                            for(int i = 1; i < cmd.Split(" ").Length; i++)
+                            {
+                                string path = cmd.Split(" ")[i];
+                                ftp.ExecuteCommand($"DELE {cmd.Split(" ")[i]}").Print();
+                            }
+                            break;
                         case "get":
                             if (ftp != null)
                             {
@@ -67,6 +87,38 @@ namespace FTPClient
                                 ftp.Upload(cmd.Split(" ")[1], cmd.Split(" ")[2]);
                             }
                             break;
+                        case "mget":
+							Console.Write("Directory: ");
+							var directoryPath = Console.ReadLine();
+
+							if (directoryPath.Last() != '/' || directoryPath.Last() != '\\')
+							{
+								directoryPath += '/';
+							}
+
+                            for(int i = 1; i < cmd.Split(" ").Length; i++)
+                            {
+                                string fromPath = cmd.Split(" ")[i];
+                                string toPath = directoryPath + fromPath;
+
+                                ftp.Download(fromPath, toPath);
+                            }
+                            break;
+                        case "msend": 
+                            for(int i = 1; i < cmd.Split(" ").Length; i++)
+                            {
+                                string fromPath = cmd.Split(" ")[i];
+                                string toPath = fromPath.Split("/").Last();
+
+                                ftp.Upload(fromPath, toPath);
+                            }
+                            break;
+                        case "mkdir":
+                            ftp.ExecuteCommand("MKD " + cmd.Split(" ")[1]).Print(); 
+                            break;
+                        case "rmdir":
+                            ftp.ExecuteCommand("RMD " + cmd.Split(" ")[1]).Print();
+                            break;
                         case "binary":
                             if (ftp != null) 
                                 ftp.ExecuteCommand("TYPE I").Print();
@@ -77,6 +129,7 @@ namespace FTPClient
                             break;
                         case "bye":
                             Console.WriteLine("Bye!");
+                            ftp.ExecuteCommand("QUIT").Print();
                             Environment.Exit(0);
                             break;
                         default:
