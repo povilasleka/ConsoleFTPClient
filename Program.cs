@@ -8,11 +8,10 @@ namespace FTPClient
 {
     internal static class Program
     {
+        private static FtpService ftp = null;
+
         private static void Main(string[] args)
         {
-            // 195.144.107.198
-            FtpService ftp = null;
-
             while(true)
             {
                 Console.Write("KT-ftp> ");
@@ -119,6 +118,9 @@ namespace FTPClient
                         case "rmdir":
                             ftp.ExecuteCommand("RMD " + cmd.Split(" ")[1]).Print();
                             break;
+                        case "rrmdir":
+                            RecursiveDeleteFolder(cmd.Split(" ")[1]);
+                            break;
                         case "binary":
                             if (ftp != null) 
                                 ftp.ExecuteCommand("TYPE I").Print();
@@ -138,6 +140,26 @@ namespace FTPClient
                     }
             }
             
+        }
+
+        private static void RecursiveDeleteFolder(string folderName)
+        {
+            ftp.ExecuteCommand("CWD " + folderName);
+
+            FTPFolder ff = new FTPFolder(ftp.Download("LIST"));
+
+            foreach(var file in ff.GetFiles())
+            {
+                ftp.ExecuteCommand("DELE " + file);
+            }
+
+            foreach(var directory in ff.GetDirectories())
+            {
+                RecursiveDeleteFolder(directory);
+            }
+
+            ftp.ExecuteCommand("CWD ..");
+            ftp.ExecuteCommand("RMD " + folderName).Print();
         }
     }
 }
