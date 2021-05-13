@@ -1,13 +1,14 @@
 using System.Collections.Generic;
 using System.Linq;
+using FTPClient.Services;
 
 namespace FTPClient
 {
-    public class FTPFolder
+    public class FTPFolderStructure
     {
         private Dictionary<string, bool> _files = new Dictionary<string, bool>(); 
 
-        public FTPFolder(SocketResponse socketResponse)
+        public FTPFolderStructure(SocketResponse socketResponse)
         {
             ParseSocketResponse(socketResponse);
         }

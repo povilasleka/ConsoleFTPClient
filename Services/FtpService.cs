@@ -36,21 +36,6 @@ namespace FTPClient.Services
             return response;
         }
 
-        public SocketResponse Download(string retrPath, string savePath)
-        {
-            ExecuteCommand("TYPE I").Print();
-            DownloadData(retrPath, savePath);
-
-            return default;
-        }
-
-        public SocketResponse Download(string cmd)
-        {
-            ExecuteCommand("TYPE A").Print();
-
-            return ReceiveData(cmd);
-        }
-
         public void Upload(string sourcePath, string destPath)
         {
             OpenDataConnection();
@@ -62,7 +47,7 @@ namespace FTPClient.Services
             _controlConnection.Receive(50).Print();
         }
 
-        private SocketResponse ReceiveData(string command = "")
+        public SocketResponse ReceiveData(string command = "")
         {
             OpenDataConnection();
 
@@ -85,36 +70,35 @@ namespace FTPClient.Services
             return new SocketResponse(ms.ToArray());
         }
 
-        private void DownloadData(string fromPath, string toPath)
+        public byte[] ReceiveFile(string filePath, int offset = 0)
         {
-            
-            string message = ExecuteCommand($"SIZE {fromPath}").Message;
-            int leftToDownload = int.Parse(message.Split(" ")[1]);
+            string executeResult = ExecuteCommand($"SIZE {filePath}").Message;
+            int fileSize = int.Parse(executeResult.Split(" ")[1]);
+
+            using MemoryStream ms = new MemoryStream();
 
             OpenDataConnection();
-            ExecuteCommand($"RETR {fromPath}").Print();
+            ExecuteCommand($"RETR {filePath}").Print();
 
-            var bytes = new byte[] {};
-            using MemoryStream ms = new MemoryStream();
-            
-            while (leftToDownload > 0)
+            _controlConnection.Receive(100).Print();
+
+            while(fileSize > 0)
             {
                 int chunkSize = 8;
-                if (leftToDownload < chunkSize)
+                if (fileSize < chunkSize)
                 {
-                    chunkSize = leftToDownload;
+                    chunkSize = fileSize;
                 }
 
-                leftToDownload -= chunkSize;
+                fileSize -= chunkSize;
 
                 var localResponse = _dataConnection.Receive(chunkSize);
-
                 ms.Write(localResponse.ByteCode);
             }
 
-            File.WriteAllBytes(toPath, ms.ToArray());
+            _dataConnection.Dispose();
 
-            _controlConnection.Receive(50).Print();
+            return ms.ToArray();
         }
         
         private void OpenDataConnection()

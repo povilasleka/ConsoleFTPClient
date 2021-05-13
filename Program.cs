@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 using FTPClient.Services;
@@ -52,7 +54,12 @@ namespace FTPClient
                         case "ls":
                             if (ftp != null)
                             {
-                                ftp.Download("LIST").Print();
+                                if (cmd.Split(" ").Length > 1)
+                                {
+                                    ftp.ReceiveData("LIST " + cmd.Split(" ")[1]).Print();
+                                }
+
+                                ftp.ReceiveData("LIST").Print();
                             }
                             break;
                         case "cd":
@@ -77,7 +84,8 @@ namespace FTPClient
                         case "get":
                             if (ftp != null)
                             {
-                                ftp.Download(cmd.Split(" ")[1], cmd.Split(" ")[2]);
+                                byte[] data = ftp.ReceiveFile(cmd.Split(" ")[1]);
+                                File.WriteAllBytes(cmd.Split(" ")[2], data);
                             }
                             break;
                         case "send":
@@ -100,7 +108,8 @@ namespace FTPClient
                                 string fromPath = cmd.Split(" ")[i];
                                 string toPath = directoryPath + fromPath;
 
-                                ftp.Download(fromPath, toPath);
+                                byte[] data = ftp.ReceiveFile(fromPath);
+                                File.WriteAllBytes(toPath, data);
                             }
                             break;
                         case "msend": 
@@ -119,7 +128,10 @@ namespace FTPClient
                             ftp.ExecuteCommand("RMD " + cmd.Split(" ")[1]).Print();
                             break;
                         case "rrmdir":
-                            RecursiveDeleteFolder(cmd.Split(" ")[1]);
+                            DeleteFolderRecursively(cmd.Split(" ")[1]);
+                            break;
+                        case "zip": 
+                            ConstructZipFile(cmd.Split(" ")[1], cmd.Split(" ")[2]);
                             break;
                         case "binary":
                             if (ftp != null) 
@@ -142,24 +154,58 @@ namespace FTPClient
             
         }
 
-        private static void RecursiveDeleteFolder(string folderName)
+        private static void DeleteFolderRecursively(string folderName)
         {
+            FTPFolderStructure folderStructure = null;
+
             ftp.ExecuteCommand("CWD " + folderName);
+            folderStructure = new FTPFolderStructure(ftp.ReceiveData("LIST"));
 
-            FTPFolder ff = new FTPFolder(ftp.Download("LIST"));
-
-            foreach(var file in ff.GetFiles())
+            foreach(var file in folderStructure.GetFiles())
             {
                 ftp.ExecuteCommand("DELE " + file);
             }
 
-            foreach(var directory in ff.GetDirectories())
+            foreach(var directory in folderStructure.GetDirectories())
             {
-                RecursiveDeleteFolder(directory);
+                DeleteFolderRecursively(directory);
             }
 
             ftp.ExecuteCommand("CWD ..");
-            ftp.ExecuteCommand("RMD " + folderName).Print();
+            ftp.ExecuteCommand("RMD " + folderName);
+        }
+
+        private static void ConstructZipFile(string folderName, string savePath)
+        {
+            using FileStream zip = new FileStream(savePath, FileMode.OpenOrCreate);
+            using ZipArchive archive = new ZipArchive(zip, ZipArchiveMode.Update);
+
+            List<string> filePaths = new();
+            GetAllFilePaths(folderName, ref filePaths);
+            foreach(var file in filePaths)
+            {
+                ZipArchiveEntry newEntry = archive.CreateEntry(file);
+                BinaryWriter bw = new BinaryWriter(newEntry.Open());
+
+                byte[] data = ftp.ReceiveFile(file);
+                bw.Write(data);
+            }
+        }
+
+        private static void GetAllFilePaths(string folderPath, ref List<string> filePaths)
+        {
+            var folderStructure = new FTPFolderStructure(
+                ftp.ReceiveData("LIST " + folderPath));
+
+            foreach(var filePath in folderStructure.GetFiles())
+            {
+                filePaths.Add(folderPath + "/" + filePath);
+            }
+
+            foreach(var directory in folderStructure.GetDirectories())
+            {
+                GetAllFilePaths(folderPath + "/" + directory, ref filePaths);
+            }
         }
     }
 }
